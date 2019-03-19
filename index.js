@@ -14,7 +14,7 @@ server.get('/', (req, res) => {
 })
 
 //Get all users
-server.get('/users', (req, res) => {
+server.get('/api/users', (req, res) => {
     db.find().then(users => {
         res.status(200).json(users)
     }).catch(error => {
@@ -23,7 +23,7 @@ server.get('/users', (req, res) => {
 })
 
 //Get a user by ID
-server.get('/users/:id', (req, res) => {
+server.get('/api/users/:id', (req, res) => {
     const  { id }  = req.params
     db.findById(id).then(user => {
         if(user.length === 0){
@@ -37,14 +37,12 @@ server.get('/users/:id', (req, res) => {
 })
 
 //Create a new user
-server.post('/users', (req, res) => {
+server.post('/api/users', (req, res) => {
     const {name, bio} = req.body
-    console.log('user info: ', userInfo)
     if(!name || !bio){
         res.status(400).json({ errorMessage: "Please provide name and bio for the user." })
-        return;
     }
-    db.insert(userInfo).then(user => {
+    db.insert({ name, bio }).then(user => {
         res.status(201).json(user)
     }).catch(error => {
         res.status(500).json({ error: "There was an error while saving the user to the database" })
@@ -52,19 +50,17 @@ server.post('/users', (req, res) => {
 })
 
 //Update user info
-server.put('/users/:id', (req, res) => {
+server.put('/api/users/:id', (req, res) => {
     const { id } = req.params;
     const { name, bio} = req.body;
 
-    if(!name || !bio){
-        res.status(400).json({errorMessage: "Please provide name and bio for the user."})
-        return;
-    }
     db.update(id, {name, bio}).then(updated => {
-        if(id === 0){
+        if(updated === 0){
             res.status(404).json({ message: "The user with the specified ID does not exist."})
-            return;
         }
+         if(!name || !bio){
+             res.status(400).json({errorMessage: "Please provide name and bio for the user."})
+            }
          res.status(200).json(updated)
     }).catch(error => {
         res.status(500).json({ error: "The user information could not be modified."  })
@@ -72,12 +68,11 @@ server.put('/users/:id', (req, res) => {
 })
 
 //Remove user
-server.delete('/users/:id', (req, res) => {
+server.delete('/api/users/:id', (req, res) => {
     const { id } = req.params
     db.remove(id).then(removedUser => {
         if(removedUser === 0){
             res.status(404).json({ message: "The user with the specified ID does not exist." })
-            return;
         }
         res.status(204).end();
     }).catch(error => {
